@@ -1,0 +1,202 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>ROI Calculator (INR)</title>
+  <style>
+    body {
+      font-family: 'Segoe UI', sans-serif;
+      background: 
+        linear-gradient(to right, rgba(230, 240, 255, 0.85), rgba(255, 255, 255, 0.85)),
+        url('https://images.unsplash.com/photo-1611974789855-9c3c67bfe6d1?auto=format&fit=crop&w=1600&q=80') 
+        no-repeat center center fixed;
+      background-size: cover;
+      margin: 0;
+      padding: 50px 20px;
+      color: #333;
+    }
+
+    .container {
+      max-width: 700px;
+      margin: auto;
+      background: rgba(255, 255, 255, 0.92);
+      padding: 40px;
+      border-radius: 16px;
+      box-shadow: 0 8px 25px rgba(0, 0, 0, 0.1);
+      backdrop-filter: blur(3px);
+    }
+
+    h2 {
+      text-align: center;
+      margin-bottom: 25px;
+      color: #003d80;
+    }
+
+    label {
+      display: block;
+      margin-top: 18px;
+      font-weight: 600;
+      color: #333;
+    }
+
+    input, select {
+      width: 100%;
+      padding: 12px;
+      margin-top: 6px;
+      font-size: 15px;
+      border: 1px solid #ccd6e0;
+      border-radius: 8px;
+      background-color: #f9fbfd;
+    }
+
+    button {
+      margin-top: 30px;
+      width: 100%;
+      padding: 14px;
+      background: #0056b3;
+      color: white;
+      font-size: 16px;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+      transition: background 0.25s ease;
+    }
+
+    button:hover {
+      background: #003f88;
+    }
+
+    .result {
+      background: #eaf8f0;
+      padding: 25px;
+      margin-top: 35px;
+      border-left: 6px solid #28a745;
+      border-radius: 10px;
+      box-shadow: 0 0 10px rgba(0,0,0,0.05);
+    }
+
+    .result p {
+      margin: 12px 0;
+      font-size: 16px;
+    }
+
+    .currency {
+      font-weight: bold;
+      color: #2c3e50;
+    }
+
+    @media screen and (max-width: 768px) {
+      .container {
+        padding: 20px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h2>ROI Calculator (₹ INR)</h2>
+
+    <label>Machine Class (HP)</label>
+    <input type="number" id="machine_hp" />
+
+    <label>Fault Mode</label>
+    <select id="fault_mode">
+      <option value="">Select Fault Mode</option>
+      <option>Unbalanced</option>
+      <option>Misalignment</option>
+      <option>Looseness</option>
+      <option>Bearing</option>
+      <option>Gear Meshing</option>
+      <option>Cavitation</option>
+      <option>Multiple Faults</option>
+    </select>
+
+    <label>Utilization (%)</label>
+    <input type="number" id="utilization_percent" />
+
+    <label>Mean Time Between Maintenance (years)</label>
+    <input type="number" id="mtbm_years" />
+
+    <label>Annual Unplanned Downtime (hrs)</label>
+    <input type="number" id="downtime_hours" />
+
+    <label>Cost of Downtime (INR/hr)</label>
+    <input type="number" id="cost_of_downtime" />
+
+    <label>Cost of Electricity (INR/kWh)</label>
+    <input type="number" id="cost_of_electricity" />
+
+    <label>Cost of Carbon Emissions (INR/tonne)</label>
+    <input type="number" id="cost_of_carbon" />
+
+    <button onclick="calculateROI()">Calculate ROI</button>
+
+    <div class="result" id="result" style="display:none;"></div>
+  </div>
+
+  <script>
+    function formatINR(number) {
+      return new Intl.NumberFormat('en-IN', {
+        style: 'currency',
+        currency: 'INR',
+        maximumFractionDigits: 2
+      }).format(number);
+    }
+
+    function calculateROI() {
+      const faultImpactFactors = {
+        "Unbalanced": 0.10,
+        "Misalignment": 0.12,
+        "Looseness": 0.08,
+        "Bearing": 0.18,
+        "Gear Meshing": 0.20,
+        "Cavitation": 0.15,
+        "Multiple Faults": 0.30
+      };
+
+      const hp = parseFloat(document.getElementById('machine_hp').value);
+      const fault = document.getElementById('fault_mode').value;
+      const utilization = parseFloat(document.getElementById('utilization_percent').value);
+      const mtbm = parseFloat(document.getElementById('mtbm_years').value);
+      const downtime = parseFloat(document.getElementById('downtime_hours').value);
+      const downtimeCost = parseFloat(document.getElementById('cost_of_downtime').value);
+      const electricityCost = parseFloat(document.getElementById('cost_of_electricity').value);
+      const carbonCost = parseFloat(document.getElementById('cost_of_carbon').value);
+
+      const HARDWARE_COST = 100000;
+      const SOFTWARE_COST = 500000;
+      const CARBON_EMISSION_FACTOR = 0.82;
+      const ANNUAL_HOURS = 8760;
+
+      const kw = hp * 0.746;
+      const annualEnergy = kw * (utilization / 100) * ANNUAL_HOURS;
+      const energyCost = annualEnergy * electricityCost;
+      const carbonEmissionTonnes = (annualEnergy * CARBON_EMISSION_FACTOR) / 1000;
+      const carbonCostINR = carbonEmissionTonnes * carbonCost;
+      const downtimeINR = downtime * downtimeCost;
+
+      const faultFactor = faultImpactFactors[fault] || 0;
+      const savings = (energyCost + carbonCostINR + downtimeINR) * faultFactor;
+
+      const annualSoftware = SOFTWARE_COST / 4;
+      const totalSystemCost = HARDWARE_COST + annualSoftware;
+
+      const roi = ((savings - totalSystemCost) / totalSystemCost) * 100;
+      const factor = roi / 100 + 1;
+
+      const resultDiv = document.getElementById("result");
+      resultDiv.style.display = "block";
+      resultDiv.innerHTML = `
+        <p><strong>Annual Energy Cost:</strong> <span class="currency">${formatINR(energyCost)}</span></p>
+        <p><strong>Carbon Emission Cost:</strong> <span class="currency">${formatINR(carbonCostINR)}</span></p>
+        <p><strong>Downtime Cost:</strong> <span class="currency">${formatINR(downtimeINR)}</span></p>
+        <p><strong>Total Avoidable Cost:</strong> <span class="currency">${formatINR(savings)}</span></p>
+        <p><strong>Total Annual System Cost:</strong> <span class="currency">${formatINR(totalSystemCost)}</span></p>
+        <p><strong>Estimated ROI:</strong> ${roi.toFixed(2)}%</p>
+        <p><strong>Expected Annual Return:</strong> ${factor.toFixed(2)}×</p>
+        <p>With predictive maintenance, your plant can expect a return of <strong>${factor.toFixed(2)}×</strong> annually on this machine.</p>
+      `;
+    }
+  </script>
+</body>
+</html>
